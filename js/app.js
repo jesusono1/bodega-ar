@@ -161,7 +161,7 @@ function hideVideoLoader() {
 
 // Delay before unloading video on targetLost (ms).
 // Prevents flickering when tracking briefly loses and regains the target.
-var TARGET_LOST_DELAY = 1500;
+var TARGET_LOST_DELAY = 3000;
 var lostTimer = null;
 
 /**
