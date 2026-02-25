@@ -51,15 +51,21 @@
         <div class="scanning-hint">Busca un cartel de máquina</div>
     </div>
 
-    <!-- INFO SCREEN (target detected, showing machine info) -->
-    <div id="screen-info" class="hidden">
-        <div class="status-bar">
-            <span class="status-dot"></span> Máquina detectada
+    <!-- VIDEO SCREEN (target detected — video plays as 2D overlay) -->
+    <div id="screen-video" class="hidden">
+        <div class="video-container">
+            <video id="overlay-video" playsinline webkit-playsinline muted loop preload="none"></video>
         </div>
-        <div class="info-card">
-            <h3 id="info-name">—</h3>
-            <div class="info-step" id="info-step">—</div>
-            <div class="info-card-line"></div>
+        <div class="video-info-bar">
+            <div class="video-info-text">
+                <h3 id="info-name">—</h3>
+                <div class="info-step" id="info-step">—</div>
+            </div>
+            <button id="btn-close-video" class="ctrl-btn" aria-label="Cerrar vídeo">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="video-desc-bar">
             <p id="info-desc">—</p>
         </div>
     </div>
@@ -76,10 +82,6 @@
     <div id="controls-bar" class="controls-bar hidden">
         <!-- Mute / Unmute -->
         <button id="btn-mute" class="ctrl-btn" aria-label="Silenciar">
-            <!-- Icon set by JS -->
-        </button>
-        <!-- Play / Pause -->
-        <button id="btn-playpause" class="ctrl-btn" aria-label="Pausar">
             <!-- Icon set by JS -->
         </button>
         <!-- Help -->
@@ -104,114 +106,41 @@
         <div class="help-line"></div>
         <ul class="help-steps">
             <li><span class="step-num">1</span>Apunta la cámara a un cartel de máquina.</li>
-            <li><span class="step-num">2</span>Mantén el móvil estable hasta que aparezca el vídeo.</li>
-            <li><span class="step-num">3</span>Verás la máquina funcionando en realidad aumentada.</li>
-            <li><span class="step-num">4</span>Mueve el móvil a otro cartel para ver la siguiente máquina.</li>
+            <li><span class="step-num">2</span>El vídeo de la máquina se reproducirá automáticamente.</li>
+            <li><span class="step-num">3</span>Pulsa la X para cerrar y buscar otro cartel.</li>
+            <li><span class="step-num">4</span>Recorre la bodega descubriendo las 15 máquinas.</li>
         </ul>
         <button id="btn-close-help" class="btn">Entendido</button>
     </div>
 
     <!-- ==================== A-FRAME AR SCENE ==================== -->
+    <!--
+        MindAR only detects which target is visible.
+        Video is NOT rendered in 3D — it plays as a 2D HTML overlay.
+        The <a-entity> targets have no children (no <a-plane>).
+    -->
     <a-scene
         mindar-image="imageTargetSrc: ./assets/targets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1"
         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true" vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false" loading-screen="enabled: false" embedded>
-        <a-assets>
-            <video id="ar-video" playsinline webkit-playsinline muted loop crossorigin="anonymous" preload="none">
-            </video>
-        </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Target 0 — Alimentador Almazara -->
-        <a-entity id="target-0" mindar-image-target="targetIndex: 0">
-            <a-plane id="video-plane-0" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 1 — Limpiadora -->
-        <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-            <a-plane id="video-plane-1" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 2 — Molturadora -->
-        <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-            <a-plane id="video-plane-2" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 3 — Centrífuga Horizontal -->
-        <a-entity id="target-3" mindar-image-target="targetIndex: 3">
-            <a-plane id="video-plane-3" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 4 — Centrífuga Vertical -->
-        <a-entity id="target-4" mindar-image-target="targetIndex: 4">
-            <a-plane id="video-plane-4" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 5 — Filtradora -->
-        <a-entity id="target-5" mindar-image-target="targetIndex: 5">
-            <a-plane id="video-plane-5" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 6 — Depósito de Decantación -->
-        <a-entity id="target-6" mindar-image-target="targetIndex: 6">
-            <a-plane id="video-plane-6" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 7 — Embotelladora Aceite -->
-        <a-entity id="target-7" mindar-image-target="targetIndex: 7">
-            <a-plane id="video-plane-7" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 8 — Despalilladora -->
-        <a-entity id="target-8" mindar-image-target="targetIndex: 8">
-            <a-plane id="video-plane-8" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 9 — Depósito de Fermentación -->
-        <a-entity id="target-9" mindar-image-target="targetIndex: 9">
-            <a-plane id="video-plane-9" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 10 — Depósito de Mezclas -->
-        <a-entity id="target-10" mindar-image-target="targetIndex: 10">
-            <a-plane id="video-plane-10" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 11 — Depósito de Envejecimiento -->
-        <a-entity id="target-11" mindar-image-target="targetIndex: 11">
-            <a-plane id="video-plane-11" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 12 — Embotelladora Vino -->
-        <a-entity id="target-12" mindar-image-target="targetIndex: 12">
-            <a-plane id="video-plane-12" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 13 — Barricas -->
-        <a-entity id="target-13" mindar-image-target="targetIndex: 13">
-            <a-plane id="video-plane-13" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
-
-        <!-- Target 14 — Zona Tranquila -->
-        <a-entity id="target-14" mindar-image-target="targetIndex: 14">
-            <a-plane id="video-plane-14" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
-                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
-        </a-entity>
+        <a-entity id="target-0" mindar-image-target="targetIndex: 0"></a-entity>
+        <a-entity id="target-1" mindar-image-target="targetIndex: 1"></a-entity>
+        <a-entity id="target-2" mindar-image-target="targetIndex: 2"></a-entity>
+        <a-entity id="target-3" mindar-image-target="targetIndex: 3"></a-entity>
+        <a-entity id="target-4" mindar-image-target="targetIndex: 4"></a-entity>
+        <a-entity id="target-5" mindar-image-target="targetIndex: 5"></a-entity>
+        <a-entity id="target-6" mindar-image-target="targetIndex: 6"></a-entity>
+        <a-entity id="target-7" mindar-image-target="targetIndex: 7"></a-entity>
+        <a-entity id="target-8" mindar-image-target="targetIndex: 8"></a-entity>
+        <a-entity id="target-9" mindar-image-target="targetIndex: 9"></a-entity>
+        <a-entity id="target-10" mindar-image-target="targetIndex: 10"></a-entity>
+        <a-entity id="target-11" mindar-image-target="targetIndex: 11"></a-entity>
+        <a-entity id="target-12" mindar-image-target="targetIndex: 12"></a-entity>
+        <a-entity id="target-13" mindar-image-target="targetIndex: 13"></a-entity>
+        <a-entity id="target-14" mindar-image-target="targetIndex: 14"></a-entity>
     </a-scene>
 
     <!-- ==================== DEVELOPMENT TOOLS ==================== -->

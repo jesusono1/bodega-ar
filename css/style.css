@@ -110,7 +110,6 @@ a-scene {
   object-fit: contain;
 }
 
-/* Fallback icon when logo is not available */
 .welcome-logo-fallback {
   font-size: 32px;
   line-height: 1;
@@ -207,7 +206,6 @@ a-scene {
   pointer-events: auto;
 }
 
-/* Scanning animation — phone icon moving */
 .scanning-icon {
   width: 48px;
   height: 48px;
@@ -265,56 +263,76 @@ a-scene {
   50% { opacity: 0.3; }
 }
 
-/* === INFO SCREEN (target detected, machine info) === */
-#screen-info {
-  background: transparent;
+/* === VIDEO SCREEN (2D overlay — replaces 3D plane) === */
+#screen-video {
+  background: #000;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
-  padding-bottom: 2rem;
-  pointer-events: none;
 }
 
-#screen-info .status-bar {
-  pointer-events: none;
+.video-container {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.info-card {
-  background: var(--color-burgundy-70);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 20px 24px;
-  max-width: 320px;
-  width: calc(100% - 2rem);
-  pointer-events: auto;
+.video-container video {
+  width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
-.info-card h3 {
+/* Info bar at top of video screen */
+.video-info-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10000;
+}
+
+.video-info-text h3 {
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: 18px;
   letter-spacing: 3px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
-.info-card .info-step {
-  font-size: 11px;
+.video-info-text .info-step {
+  font-size: 10px;
   color: var(--color-white-50);
   text-transform: uppercase;
   letter-spacing: 2px;
-  margin-bottom: 8px;
 }
 
-.info-card-line {
-  width: 30px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.4);
-  margin-bottom: 10px;
+/* Description bar at bottom of video screen */
+.video-desc-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
 }
 
-.info-card p {
+.video-desc-bar p {
   font-size: 13px;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.8);
