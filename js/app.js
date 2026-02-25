@@ -186,6 +186,45 @@ function cancelLostTimer() {
 }
 
 /**
+ * Force a target entity's video plane to stay visible.
+ * MindAR toggles object3D.visible every frame based on tracking confidence,
+ * which causes flickering. We override this by forcing visible = true
+ * on every render tick while the target is active.
+ */
+var visibilityOverride = null;
+
+function startVisibilityOverride(targetIndex) {
+  stopVisibilityOverride();
+  var entity = document.getElementById('target-' + targetIndex);
+  if (!entity) return;
+
+  visibilityOverride = function () {
+    if (entity.object3D) {
+      entity.object3D.visible = true;
+    }
+  };
+  sceneEl.addEventListener('renderstart', visibilityOverride);
+  // A-Frame uses 'beforerender' or we can use the tick via a component,
+  // but the simplest approach is to override on each animation frame
+  visibilityOverride._raf = function loop() {
+    if (!visibilityOverride) return;
+    if (entity.object3D) entity.object3D.visible = true;
+    visibilityOverride._rafId = requestAnimationFrame(loop);
+  };
+  visibilityOverride._rafId = requestAnimationFrame(visibilityOverride._raf);
+}
+
+function stopVisibilityOverride() {
+  if (visibilityOverride) {
+    if (visibilityOverride._rafId) {
+      cancelAnimationFrame(visibilityOverride._rafId);
+    }
+    sceneEl.removeEventListener('renderstart', visibilityOverride);
+    visibilityOverride = null;
+  }
+}
+
+/**
  * Load and play a machine video when its target is found.
  */
 function onTargetFound(targetIndex) {
@@ -207,11 +246,15 @@ function onTargetFound(targetIndex) {
 
   // Different target — release previous video
   cancelLostTimer();
+  stopVisibilityOverride();
   if (currentTargetIndex !== -1) {
     releaseVideo();
   }
 
   currentTargetIndex = targetIndex;
+
+  // Force the target entity to stay visible (prevents MindAR flickering)
+  startVisibilityOverride(targetIndex);
 
   // Update info panel
   document.getElementById('info-name').textContent = maquina.nombre;
@@ -262,6 +305,7 @@ function onTargetLost(targetIndex) {
     // Only release if this target is still the active one
     if (currentTargetIndex === targetIndex) {
       currentTargetIndex = -1;
+      stopVisibilityOverride();
       releaseVideo();
       showScreen('screen-scanning');
     }
@@ -344,6 +388,7 @@ function hideHelp() {
 function goHome() {
   // Cancel any pending lost timer and release video
   cancelLostTimer();
+  stopVisibilityOverride();
   if (currentTargetIndex !== -1) {
     currentTargetIndex = -1;
     releaseVideo();
