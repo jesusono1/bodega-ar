@@ -220,6 +220,30 @@
     <script>eruda.init();</script>
     <div class="dev-banner">DEV MODE</div>
 
+    <!-- DEBUG LOG — visible on screen for mobile debugging -->
+    <div id="debug-log" style="position:fixed;bottom:60px;left:8px;right:8px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:11px;padding:8px;border-radius:8px;z-index:999999;pointer-events:auto;display:block;"></div>
+    <script>
+    (function() {
+      var logEl = document.getElementById('debug-log');
+      function dlog(msg) {
+        var p = document.createElement('div');
+        p.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+        logEl.appendChild(p);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+      window.dlog = dlog;
+      // Capture console.log, warn, error
+      var origLog = console.log, origWarn = console.warn, origErr = console.error;
+      console.log = function() { origLog.apply(console, arguments); dlog('LOG: ' + Array.from(arguments).join(' ')); };
+      console.warn = function() { origWarn.apply(console, arguments); dlog('WARN: ' + Array.from(arguments).join(' ')); };
+      console.error = function() { origErr.apply(console, arguments); dlog('ERR: ' + Array.from(arguments).join(' ')); };
+      // Capture uncaught errors
+      window.addEventListener('error', function(e) { dlog('UNCAUGHT: ' + e.message + ' @ ' + e.filename + ':' + e.lineno); });
+      window.addEventListener('unhandledrejection', function(e) { dlog('PROMISE: ' + (e.reason ? e.reason.message || e.reason : 'unknown')); });
+      dlog('Debug log active');
+    })();
+    </script>
+
     <!-- ==================== APP LOGIC ==================== -->
     <script src="./js/app.js"></script>
 
