@@ -159,6 +159,11 @@ function hideVideoLoader() {
 
 // === AR VIDEO MANAGEMENT ===
 
+// Delay before unloading video on targetLost (ms).
+// Prevents flickering when tracking briefly loses and regains the target.
+var TARGET_LOST_DELAY = 1500;
+var lostTimer = null;
+
 /**
  * Release the shared video element and free memory.
  */
@@ -171,18 +176,38 @@ function releaseVideo() {
 }
 
 /**
+ * Cancel any pending targetLost timer.
+ */
+function cancelLostTimer() {
+  if (lostTimer !== null) {
+    clearTimeout(lostTimer);
+    lostTimer = null;
+  }
+}
+
+/**
  * Load and play a machine video when its target is found.
  */
 function onTargetFound(targetIndex) {
   var maquina = MAQUINAS[targetIndex];
   if (!maquina) {
-    // No machine data for this target
     return;
   }
 
-  // Release any previously loaded video before loading the new one
-  if (currentTargetIndex !== -1 && currentTargetIndex !== targetIndex) {
-    // Release previous video before loading new one
+  // If the same target re-appeared, cancel the pending lost timer
+  if (currentTargetIndex === targetIndex) {
+    cancelLostTimer();
+    // Video is already loaded — just make sure it's playing
+    if (arVideo.paused && !isVideoPaused) {
+      arVideo.play();
+    }
+    showScreen('screen-info');
+    return;
+  }
+
+  // Different target — release previous video
+  cancelLostTimer();
+  if (currentTargetIndex !== -1) {
     releaseVideo();
   }
 
@@ -206,8 +231,7 @@ function onTargetFound(targetIndex) {
       hideVideoLoader();
       isVideoPaused = false;
       updatePlayPauseBtn();
-    }).catch(function (err) {
-      // Video autoplay blocked
+    }).catch(function () {
       hideVideoLoader();
     });
   }
@@ -220,24 +244,28 @@ function onTargetFound(targetIndex) {
 
   // Switch to info screen
   showScreen('screen-info');
-  // Target found — video loading
 }
 
 /**
- * Pause and unload the video when the target is lost.
+ * Handle target lost with a delay to avoid flickering.
+ * If the same target reappears within TARGET_LOST_DELAY ms,
+ * the timer is cancelled and the video keeps playing.
  */
 function onTargetLost(targetIndex) {
-  // Guard: ignore stale lost events if another target is already active
   if (currentTargetIndex !== targetIndex) {
-    return; // Ignore stale event
+    return;
   }
 
-  currentTargetIndex = -1;
-
-  releaseVideo();
-
-  // Back to scanning screen
-  showScreen('screen-scanning');
+  cancelLostTimer();
+  lostTimer = setTimeout(function () {
+    lostTimer = null;
+    // Only release if this target is still the active one
+    if (currentTargetIndex === targetIndex) {
+      currentTargetIndex = -1;
+      releaseVideo();
+      showScreen('screen-scanning');
+    }
+  }, TARGET_LOST_DELAY);
 }
 
 // === CONTROLS ===
@@ -314,7 +342,8 @@ function hideHelp() {
  * Return to the welcome screen, stopping AR.
  */
 function goHome() {
-  // Release current video
+  // Cancel any pending lost timer and release video
+  cancelLostTimer();
   if (currentTargetIndex !== -1) {
     currentTargetIndex = -1;
     releaseVideo();
