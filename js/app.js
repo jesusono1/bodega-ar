@@ -176,13 +176,13 @@ function releaseVideo() {
 function onTargetFound(targetIndex) {
   var maquina = MAQUINAS[targetIndex];
   if (!maquina) {
-    console.warn('[AR] No machine data for targetIndex:', targetIndex);
+    // No machine data for this target
     return;
   }
 
   // Release any previously loaded video before loading the new one
   if (currentTargetIndex !== -1 && currentTargetIndex !== targetIndex) {
-    console.log('[AR] Releasing previous video for target:', currentTargetIndex);
+    // Release previous video before loading new one
     releaseVideo();
   }
 
@@ -207,7 +207,7 @@ function onTargetFound(targetIndex) {
       isVideoPaused = false;
       updatePlayPauseBtn();
     }).catch(function (err) {
-      console.warn('[AR] Video autoplay blocked:', err.message);
+      // Video autoplay blocked
       hideVideoLoader();
     });
   }
@@ -220,7 +220,7 @@ function onTargetFound(targetIndex) {
 
   // Switch to info screen
   showScreen('screen-info');
-  console.log('[AR] Target found:', maquina.nombre, '(index ' + targetIndex + ')');
+  // Target found — video loading
 }
 
 /**
@@ -229,11 +229,9 @@ function onTargetFound(targetIndex) {
 function onTargetLost(targetIndex) {
   // Guard: ignore stale lost events if another target is already active
   if (currentTargetIndex !== targetIndex) {
-    console.log('[AR] Ignoring stale targetLost for index:', targetIndex, '(current:', currentTargetIndex + ')');
-    return;
+    return; // Ignore stale event
   }
 
-  console.log('[AR] Target lost, index:', targetIndex);
   currentTargetIndex = -1;
 
   releaseVideo();
@@ -328,7 +326,7 @@ function goHome() {
       var mindARSystem = sceneEl.components['mindar-image-system'];
       if (mindARSystem) mindARSystem.stop();
     } catch (e) {
-      console.warn('[AR] Could not stop MindAR:', e);
+      // Could not stop MindAR
     }
   }
 
@@ -353,12 +351,9 @@ function startAR() {
     return;
   }
 
-  sceneEl.addEventListener('arReady', function () {
-    console.log('[AR] MindAR ready — tracking active');
-  });
+  sceneEl.addEventListener('arReady', function () {});
 
-  sceneEl.addEventListener('arError', function (e) {
-    console.error('[AR] MindAR arError event:', e);
+  sceneEl.addEventListener('arError', function () {
     showScreen('screen-error');
   });
 
@@ -378,15 +373,10 @@ function startAR() {
     try {
       var mindARSystem = getMindARSystem();
       if (mindARSystem) {
-        console.log('[AR] Starting MindAR (attempt ' + attempt + ', found via ' + (sceneEl.components['mindar-image-system'] ? 'components' : 'systems') + ')');
         mindARSystem.start();
       } else if (attempt < maxAttempts) {
-        console.warn('[AR] MindAR system not ready, retry ' + attempt + '/' + maxAttempts + ' in 2s...');
         setTimeout(function () { tryStartMindAR(attempt + 1); }, 2000);
       } else {
-        console.error('[AR] MindAR system not available after ' + maxAttempts + ' retries');
-        console.error('[AR] sceneEl.components keys: ' + Object.keys(sceneEl.components || {}).join(', '));
-        console.error('[AR] sceneEl.systems keys: ' + Object.keys(sceneEl.systems || {}).join(', '));
         showScreen('screen-error');
       }
     } catch (err) {
@@ -396,13 +386,10 @@ function startAR() {
   }
 
   // Wait for scene to be fully loaded before starting
-  console.log('[AR] Scene hasLoaded:', sceneEl.hasLoaded);
   if (sceneEl.hasLoaded) {
     tryStartMindAR(1);
   } else {
-    console.log('[AR] Waiting for scene loaded event...');
     sceneEl.addEventListener('loaded', function () {
-      console.log('[AR] Scene loaded event fired');
       tryStartMindAR(1);
     });
   }
@@ -415,7 +402,7 @@ function bindTargetEvents() {
   MAQUINAS.forEach(function (maquina) {
     var entity = document.getElementById('target-' + maquina.id);
     if (!entity) {
-      console.warn('[AR] Entity not found for target-' + maquina.id);
+      // Entity not found for this target
       return;
     }
 
@@ -428,27 +415,19 @@ function bindTargetEvents() {
       });
     })(maquina.id);
 
-    console.log('[AR] Events bound for target-' + maquina.id + ' (' + maquina.nombre + ')');
+    // Events bound for this target
   });
 }
 
 // === DEV MODE: MOCKING FUNCTIONS ===
 
 function simulateTargetFound(targetIndex) {
-  if (!DEV_MODE) {
-    console.warn('[DEV] Mocking disabled — DEV_MODE is false');
-    return;
-  }
-  console.log('[DEV] Simulating targetFound for index:', targetIndex);
+  if (!DEV_MODE) return;
   onTargetFound(targetIndex);
 }
 
 function simulateTargetLost(targetIndex) {
-  if (!DEV_MODE) {
-    console.warn('[DEV] Mocking disabled — DEV_MODE is false');
-    return;
-  }
-  console.log('[DEV] Simulating targetLost for index:', targetIndex);
+  if (!DEV_MODE) return;
   onTargetLost(targetIndex);
 }
 
@@ -501,11 +480,4 @@ if (sceneEl.hasLoaded) {
 updateMuteBtn();
 updatePlayPauseBtn();
 
-console.log('[App] Bodega AR — 15 targets configured');
-if (DEV_MODE) {
-  console.log('[DEV] Dev mode ON.');
-  MAQUINAS.forEach(function (m) {
-    console.log('[DEV]   simulateTargetFound(' + m.id + ')  →  ' + m.nombre);
-  });
-  console.log('[DEV]   simulateTargetLost(N)  →  libera el target N');
-}
+// App ready
