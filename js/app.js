@@ -362,18 +362,31 @@ function startAR() {
     showScreen('screen-error');
   });
 
-  // Try to start MindAR, with retries if the system isn't ready yet
+  // Try to find and start MindAR system
+  function getMindARSystem() {
+    // Method 1: via components (older A-Frame / MindAR pattern)
+    var sys = sceneEl.components && sceneEl.components['mindar-image-system'];
+    if (sys) return sys;
+    // Method 2: via systems (A-Frame systems registry)
+    sys = sceneEl.systems && sceneEl.systems['mindar-image-system'];
+    if (sys) return sys;
+    return null;
+  }
+
   function tryStartMindAR(attempt) {
+    var maxAttempts = 15;
     try {
-      var mindARSystem = sceneEl.components['mindar-image-system'];
+      var mindARSystem = getMindARSystem();
       if (mindARSystem) {
-        console.log('[AR] Starting MindAR (attempt ' + attempt + ')...');
+        console.log('[AR] Starting MindAR (attempt ' + attempt + ', found via ' + (sceneEl.components['mindar-image-system'] ? 'components' : 'systems') + ')');
         mindARSystem.start();
-      } else if (attempt < 5) {
-        console.warn('[AR] MindAR system not ready, retry ' + attempt + '/5 in 1s...');
-        setTimeout(function () { tryStartMindAR(attempt + 1); }, 1000);
+      } else if (attempt < maxAttempts) {
+        console.warn('[AR] MindAR system not ready, retry ' + attempt + '/' + maxAttempts + ' in 2s...');
+        setTimeout(function () { tryStartMindAR(attempt + 1); }, 2000);
       } else {
-        console.error('[AR] MindAR system not available after 5 retries');
+        console.error('[AR] MindAR system not available after ' + maxAttempts + ' retries');
+        console.error('[AR] sceneEl.components keys: ' + Object.keys(sceneEl.components || {}).join(', '));
+        console.error('[AR] sceneEl.systems keys: ' + Object.keys(sceneEl.systems || {}).join(', '));
         showScreen('screen-error');
       }
     } catch (err) {
@@ -382,11 +395,14 @@ function startAR() {
     }
   }
 
-  // Wait for scene to be loaded before starting
+  // Wait for scene to be fully loaded before starting
+  console.log('[AR] Scene hasLoaded:', sceneEl.hasLoaded);
   if (sceneEl.hasLoaded) {
     tryStartMindAR(1);
   } else {
+    console.log('[AR] Waiting for scene loaded event...');
     sceneEl.addEventListener('loaded', function () {
+      console.log('[AR] Scene loaded event fired');
       tryStartMindAR(1);
     });
   }
