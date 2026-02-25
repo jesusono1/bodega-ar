@@ -347,7 +347,7 @@ function isMobileDevice() {
 function startAR() {
   showScreen('screen-scanning');
 
-  // On desktop in DEV_MODE, skip MindAR
+  // On desktop in DEV_MODE, skip MindAR (can't open camera on PC)
   if (DEV_MODE && !isMobileDevice()) {
     console.log('[DEV] Desktop detected — skipping MindAR. Use simulateTargetFound(0) to test.');
     return;
@@ -357,29 +357,38 @@ function startAR() {
     console.log('[AR] MindAR ready — tracking active');
   });
 
-  sceneEl.addEventListener('arError', function () {
-    console.error('[AR] MindAR error — camera or tracking failed');
+  sceneEl.addEventListener('arError', function (e) {
+    console.error('[AR] MindAR arError event:', e);
     showScreen('screen-error');
   });
 
-  try {
-    var mindARSystem = sceneEl.components['mindar-image-system'];
-    if (mindARSystem) {
-      mindARSystem.start();
-    } else {
-      console.warn('[AR] MindAR system not ready, retrying in 1s...');
-      setTimeout(function () {
-        try {
-          sceneEl.components['mindar-image-system'].start();
-        } catch (retryErr) {
-          console.error('[AR] Retry failed:', retryErr);
-          showScreen('screen-error');
-        }
-      }, 1000);
+  // Try to start MindAR, with retries if the system isn't ready yet
+  function tryStartMindAR(attempt) {
+    try {
+      var mindARSystem = sceneEl.components['mindar-image-system'];
+      if (mindARSystem) {
+        console.log('[AR] Starting MindAR (attempt ' + attempt + ')...');
+        mindARSystem.start();
+      } else if (attempt < 5) {
+        console.warn('[AR] MindAR system not ready, retry ' + attempt + '/5 in 1s...');
+        setTimeout(function () { tryStartMindAR(attempt + 1); }, 1000);
+      } else {
+        console.error('[AR] MindAR system not available after 5 retries');
+        showScreen('screen-error');
+      }
+    } catch (err) {
+      console.error('[AR] Failed to start MindAR:', err);
+      showScreen('screen-error');
     }
-  } catch (err) {
-    console.error('[AR] Failed to start MindAR:', err);
-    showScreen('screen-error');
+  }
+
+  // Wait for scene to be loaded before starting
+  if (sceneEl.hasLoaded) {
+    tryStartMindAR(1);
+  } else {
+    sceneEl.addEventListener('loaded', function () {
+      tryStartMindAR(1);
+    });
   }
 }
 
