@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bodega AR — Aldonza Gourmet</title>
+    <meta name="description" content="Experiencia de Realidad Aumentada para la visita a la bodega y almazara Aldonza.">
+
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+    <!-- MindAR (image tracking for A-Frame) -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+    <!-- ==================== SCREENS ==================== -->
+
+    <!-- WELCOME SCREEN (visible on load) -->
+    <div id="screen-welcome">
+        <div class="welcome-logo">
+            <span class="welcome-logo-fallback">A</span>
+        </div>
+        <h1>Bodega &amp; Almazara</h1>
+        <div class="welcome-subtitle">Aldonza Gourmet</div>
+        <div class="welcome-line"></div>
+        <p>Apunta tu cámara a los carteles de las máquinas para verlas funcionar en realidad aumentada.</p>
+        <button id="btn-start" class="btn">Comenzar visita</button>
+    </div>
+
+    <!-- SCANNING SCREEN (camera active, looking for targets) -->
+    <div id="screen-scanning" class="hidden">
+        <div class="status-bar">
+            <span class="status-dot"></span> Cámara activa
+        </div>
+        <div class="scanning-icon">
+            <svg viewBox="0 0 48 48">
+                <rect x="12" y="6" width="24" height="36" rx="3"></rect>
+                <line x1="18" y1="36" x2="30" y2="36"></line>
+                <path d="M8 18 L4 18 L4 12 L10 12" stroke-dasharray="2 2" opacity="0.5"></path>
+                <path d="M40 18 L44 18 L44 12 L38 12" stroke-dasharray="2 2" opacity="0.5"></path>
+                <path d="M8 30 L4 30 L4 36 L10 36" stroke-dasharray="2 2" opacity="0.5"></path>
+                <path d="M40 30 L44 30 L44 36 L38 36" stroke-dasharray="2 2" opacity="0.5"></path>
+            </svg>
+        </div>
+        <div class="scanning-hint">Busca un cartel de máquina</div>
+    </div>
+
+    <!-- INFO SCREEN (target detected, showing machine info) -->
+    <div id="screen-info" class="hidden">
+        <div class="status-bar">
+            <span class="status-dot"></span> Máquina detectada
+        </div>
+        <div class="info-card">
+            <h3 id="info-name">—</h3>
+            <div class="info-step" id="info-step">—</div>
+            <div class="info-card-line"></div>
+            <p id="info-desc">—</p>
+        </div>
+    </div>
+
+    <!-- ERROR SCREEN -->
+    <div id="screen-error" class="hidden">
+        <div class="error-icon">!</div>
+        <h2>Cámara no disponible</h2>
+        <p>No se pudo acceder a la cámara. Verifica los permisos en los ajustes del navegador e inténtalo de nuevo.</p>
+        <button id="btn-retry" class="btn">Reintentar</button>
+    </div>
+
+    <!-- ==================== CONTROLS BAR ==================== -->
+    <div id="controls-bar" class="controls-bar hidden">
+        <!-- Mute / Unmute -->
+        <button id="btn-mute" class="ctrl-btn" aria-label="Silenciar">
+            <!-- Icon set by JS -->
+        </button>
+        <!-- Play / Pause -->
+        <button id="btn-playpause" class="ctrl-btn" aria-label="Pausar">
+            <!-- Icon set by JS -->
+        </button>
+        <!-- Help -->
+        <button id="btn-help" class="ctrl-btn" aria-label="Ayuda">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"></path><circle cx="12" cy="17" r="0.5" fill="white" stroke="none"></circle></svg>
+        </button>
+        <!-- Home -->
+        <button id="btn-home" class="ctrl-btn" aria-label="Volver al inicio">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"></path></svg>
+        </button>
+    </div>
+
+    <!-- ==================== VIDEO LOADING SPINNER ==================== -->
+    <div id="video-loader" class="video-loader hidden">
+        <div class="spinner"></div>
+        <span>Cargando vídeo</span>
+    </div>
+
+    <!-- ==================== HELP MODAL ==================== -->
+    <div id="modal-help" class="hidden">
+        <h2>Ayuda</h2>
+        <div class="help-line"></div>
+        <ul class="help-steps">
+            <li><span class="step-num">1</span>Apunta la cámara a un cartel de máquina.</li>
+            <li><span class="step-num">2</span>Mantén el móvil estable hasta que aparezca el vídeo.</li>
+            <li><span class="step-num">3</span>Verás la máquina funcionando en realidad aumentada.</li>
+            <li><span class="step-num">4</span>Mueve el móvil a otro cartel para ver la siguiente máquina.</li>
+        </ul>
+        <button id="btn-close-help" class="btn">Entendido</button>
+    </div>
+
+    <!-- ==================== A-FRAME AR SCENE ==================== -->
+    <a-scene
+        mindar-image="imageTargetSrc: ./assets/targets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1"
+        color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false" loading-screen="enabled: false" embedded>
+        <a-assets>
+            <video id="ar-video" playsinline webkit-playsinline muted loop crossorigin="anonymous" preload="none">
+            </video>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- Target 0 — Alimentador Almazara -->
+        <a-entity id="target-0" mindar-image-target="targetIndex: 0">
+            <a-plane id="video-plane-0" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 1 — Limpiadora -->
+        <a-entity id="target-1" mindar-image-target="targetIndex: 1">
+            <a-plane id="video-plane-1" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 2 — Molturadora -->
+        <a-entity id="target-2" mindar-image-target="targetIndex: 2">
+            <a-plane id="video-plane-2" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 3 — Centrífuga Horizontal -->
+        <a-entity id="target-3" mindar-image-target="targetIndex: 3">
+            <a-plane id="video-plane-3" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 4 — Centrífuga Vertical -->
+        <a-entity id="target-4" mindar-image-target="targetIndex: 4">
+            <a-plane id="video-plane-4" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 5 — Filtradora -->
+        <a-entity id="target-5" mindar-image-target="targetIndex: 5">
+            <a-plane id="video-plane-5" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 6 — Depósito de Decantación -->
+        <a-entity id="target-6" mindar-image-target="targetIndex: 6">
+            <a-plane id="video-plane-6" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 7 — Embotelladora Aceite -->
+        <a-entity id="target-7" mindar-image-target="targetIndex: 7">
+            <a-plane id="video-plane-7" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 8 — Despalilladora -->
+        <a-entity id="target-8" mindar-image-target="targetIndex: 8">
+            <a-plane id="video-plane-8" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 9 — Depósito de Fermentación -->
+        <a-entity id="target-9" mindar-image-target="targetIndex: 9">
+            <a-plane id="video-plane-9" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 10 — Depósito de Mezclas -->
+        <a-entity id="target-10" mindar-image-target="targetIndex: 10">
+            <a-plane id="video-plane-10" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 11 — Depósito de Envejecimiento -->
+        <a-entity id="target-11" mindar-image-target="targetIndex: 11">
+            <a-plane id="video-plane-11" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 12 — Embotelladora Vino -->
+        <a-entity id="target-12" mindar-image-target="targetIndex: 12">
+            <a-plane id="video-plane-12" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 13 — Barricas -->
+        <a-entity id="target-13" mindar-image-target="targetIndex: 13">
+            <a-plane id="video-plane-13" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+
+        <!-- Target 14 — Zona Tranquila -->
+        <a-entity id="target-14" mindar-image-target="targetIndex: 14">
+            <a-plane id="video-plane-14" position="0 0 0" width="1" height="0.5625" rotation="0 0 0"
+                material="src: #ar-video; transparent: false; shader: flat"></a-plane>
+        </a-entity>
+    </a-scene>
+
+    <!-- ==================== DEVELOPMENT TOOLS ==================== -->
+    <!-- SOLO DESARROLLO — eliminar en producción (Módulo 6) -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+    <div class="dev-banner">DEV MODE</div>
+
+    <!-- ==================== APP LOGIC ==================== -->
+    <script src="./js/app.js"></script>
+
+</body>
+
+</html>

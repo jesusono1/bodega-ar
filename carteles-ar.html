@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carteles AR — Bodega y Almazara Aldonza</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Yeseva+One&family=Montserrat:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    font-family: 'Yeseva One', cursive;
+    text-align: center;
+    font-size: 28px;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    color: #d4a574;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 40px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 40px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .poster-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .poster-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  .poster {
+    width: 380px;
+    height: 538px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  .poster canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .download-btn {
+    margin-top: 12px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #4D161F;
+    color: #d4a574;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.3s;
+  }
+
+  .download-btn:hover {
+    background: #4D161F;
+    color: #fff;
+  }
+
+  .download-all {
+    display: block;
+    margin: 0 auto 40px;
+    padding: 14px 40px;
+    background: #4D161F;
+    border: 2px solid #d4a574;
+    color: #d4a574;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 30px;
+    transition: all 0.3s;
+  }
+
+  .download-all:hover {
+    background: #d4a574;
+    color: #230909;
+  }
+
+  .instructions {
+    max-width: 700px;
+    margin: 0 auto 40px;
+    padding: 20px 30px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #999;
+  }
+
+  .instructions strong { color: #d4a574; }
+</style>
+</head>
+<body>
+
+<h1>Carteles AR — Aldonza</h1>
+<p class="subtitle">Bodega y Almazara · 15 Image Targets para MindAR</p>
+
+<div class="instructions">
+  <strong>Instrucciones de impresión:</strong> Imprimir cada cartel en <strong>A3 mínimo</strong> (A4 aceptable). 
+  Usar <strong>papel mate</strong> (nunca brillo/laminado). Cada cartel es único y asimétrico para maximizar 
+  la detección de MindAR. Los grabados vintage proporcionan alta densidad de feature points.
+</div>
+
+<button class="download-all" onclick="downloadAll()">Descargar todos (PNG)</button>
+
+<div class="grid" id="grid"></div>
+
+<script>
+// ============================================================
+// DATA: 15 máquinas con sus ilustraciones vintage
+// ============================================================
+const machines = [
+  { id: 1,  name: "Alimentador\nAlmazara",           zone: "ALMAZARA",  icon: "hopper",        desc: "Recepción de la aceituna" },
+  { id: 2,  name: "Limpiadora",                       zone: "ALMAZARA",  icon: "cleaner",       desc: "Limpieza y lavado" },
+  { id: 3,  name: "Molturadora",                      zone: "ALMAZARA",  icon: "crusher",       desc: "Trituración de la aceituna" },
+  { id: 4,  name: "Centrífuga\nHorizontal",           zone: "ALMAZARA",  icon: "hcentrifuge",   desc: "Separación de fases" },
+  { id: 5,  name: "Centrífuga\nVertical",             zone: "ALMAZARA",  icon: "vcentrifuge",   desc: "Purificación del aceite" },
+  { id: 6,  name: "Filtradora",                       zone: "ALMAZARA",  icon: "filter",        desc: "Filtrado final" },
+  { id: 7,  name: "Depósito de\nDecantación",         zone: "ALMAZARA",  icon: "tank",          desc: "Reposo y clarificación" },
+  { id: 8,  name: "Embotelladora\nAceite",            zone: "ALMAZARA",  icon: "bottler_oil",   desc: "Envasado del aceite" },
+  { id: 9,  name: "Despalilladora",                   zone: "BODEGA",    icon: "destemmer",     desc: "Separación del raspón" },
+  { id: 10, name: "Depósito de\nFermentación",        zone: "BODEGA",    icon: "fermenter",     desc: "Fermentación alcohólica" },
+  { id: 11, name: "Depósito de\nMezclas",             zone: "BODEGA",    icon: "blend_tank",    desc: "Coupage y ensamblaje" },
+  { id: 12, name: "Depósito de\nEnvejecimiento",      zone: "BODEGA",    icon: "aging_tank",    desc: "Crianza en depósito" },
+  { id: 13, name: "Embotelladora",                    zone: "BODEGA",    icon: "bottler_wine",  desc: "Envasado del vino" },
+  { id: 14, name: "Barricas",                         zone: "BODEGA",    icon: "barrels",       desc: "Crianza en roble" },
+  { id: 15, name: "Zona\nTranquila",                  zone: "BODEGA",    icon: "quiet",         desc: "Reposo en botella" },
+];
+
+// Poster dimensions (A3 proportion at 72dpi for screen, export at higher res)
+const W = 760;
+const H = 1076;
+
+// ============================================================
+// VINTAGE ILLUSTRATION GENERATORS (unique per machine)
+// ============================================================
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function drawVintageTexture(ctx, w, h, seed) {
+  const rng = seededRandom(seed);
+  // Paper grain
+  for (let i = 0; i < 15000; i++) {
+    const x = rng() * w;
+    const y = rng() * h;
+    const alpha = rng() * 0.08;
+    ctx.fillStyle = `rgba(${rng() > 0.5 ? 60 : 30}, ${rng() > 0.5 ? 20 : 10}, ${rng() > 0.5 ? 15 : 5}, ${alpha})`;
+    ctx.fillRect(x, y, rng() * 2 + 0.5, rng() * 2 + 0.5);
+  }
+  // Aged spots
+  for (let i = 0; i < 30; i++) {
+    const x = rng() * w;
+    const y = rng() * h;
+    const r = rng() * 15 + 3;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180, 150, 100, ${rng() * 0.06})`;
+    ctx.fill();
+  }
+}
+
+function drawBorderFrame(ctx, w, h, seed) {
+  const rng = seededRandom(seed);
+  const margin = 28;
+  const inner = 38;
+  
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 2;
+  
+  // Outer border
+  ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
+  
+  // Inner border with decorative corners
+  ctx.lineWidth = 1;
+  ctx.strokeRect(inner, inner, w - inner * 2, h - inner * 2);
+  
+  // Corner ornaments (unique per poster via seed)
+  const cornerSize = 20;
+  const corners = [
+    [inner, inner],
+    [w - inner, inner],
+    [inner, h - inner],
+    [w - inner, h - inner]
+  ];
+  
+  corners.forEach(([cx, cy], i) => {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(i * Math.PI / 2);
+    
+    // Decorative L-shape with flourish
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(cornerSize, 0);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, cornerSize);
+    
+    // Small diamond
+    ctx.moveTo(5, 5);
+    ctx.lineTo(8, 2);
+    ctx.lineTo(11, 5);
+    ctx.lineTo(8, 8);
+    ctx.closePath();
+    
+    ctx.strokeStyle = '#4D161F';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = '#4D161F';
+    ctx.fill();
+    ctx.restore();
+  });
+  
+  // Horizontal decorative line under header area
+  const lineY = 180;
+  ctx.beginPath();
+  ctx.moveTo(60, lineY);
+  ctx.lineTo(w - 60, lineY);
+  ctx.strokeStyle = 'rgba(77, 22, 31, 0.3)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  
+  // Decorative center diamond on that line
+  const cx = w / 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, lineY - 6);
+  ctx.lineTo(cx + 6, lineY);
+  ctx.lineTo(cx, lineY + 6);
+  ctx.lineTo(cx - 6, lineY);
+  ctx.closePath();
+  ctx.fillStyle = '#4D161F';
+  ctx.fill();
+}
+
+function drawVintageIllustration(ctx, centerX, centerY, type, seed) {
+  const rng = seededRandom(seed);
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  
+  const color1 = '#3D0D15';
+  const color2 = '#4D161F';
+  const color3 = '#6B2430';
+  const color4 = 'rgba(77, 22, 31, 0.5)';
+  
+  // Each machine gets a unique hand-drawn style illustration
+  switch(type) {
+    case 'hopper': // Alimentador - tolva/hopper
+      drawHopper(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'cleaner': // Limpiadora - rotating drum
+      drawCleaner(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'crusher': // Molturadora - grinding stones
+      drawCrusher(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'hcentrifuge': // Centrífuga horizontal
+      drawHCentrifuge(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'vcentrifuge': // Centrífuga vertical
+      drawVCentrifuge(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'filter': // Filtradora
+      drawFilter(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'tank': // Depósito decantación
+      drawTank(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'bottler_oil': // Embotelladora aceite
+      drawBottlerOil(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'destemmer': // Despalilladora
+      drawDestemmer(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'fermenter': // Depósito fermentación
+      drawFermenter(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'blend_tank': // Depósito mezclas
+      drawBlendTank(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'aging_tank': // Depósito envejecimiento
+      drawAgingTank(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'bottler_wine': // Embotelladora vino
+      drawBottlerWine(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'barrels': // Barricas
+      drawBarrels(ctx, rng, color1, color2, color3, color4);
+      break;
+    case 'quiet': // Zona tranquila
+      drawQuietZone(ctx, rng, color1, color2, color3, color4);
+      break;
+  }
+  
+  ctx.restore();
+}
+
+// Helper: cross-hatching lines for vintage engraving effect
+function crossHatch(ctx, x, y, w, h, density, angle, color) {
+  ctx.save();
+  ctx.translate(x + w/2, y + h/2);
+  ctx.rotate(angle);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.7;
+  const step = density;
+  for (let i = -Math.max(w,h); i < Math.max(w,h); i += step) {
+    ctx.beginPath();
+    ctx.moveTo(i, -Math.max(w,h));
+    ctx.lineTo(i, Math.max(w,h));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Helper: draw olive branch decoration
+function drawOliveBranch(ctx, x, y, scale, flip, rng) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(flip ? -scale : scale, scale);
+  
+  // Main branch
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(20, -10, 50, -5, 80, -15);
+  ctx.bezierCurveTo(100, -20, 120, -10, 140, -18);
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 1.5 / scale;
+  ctx.stroke();
+  
+  // Leaves
+  const leaves = [[20, -12], [35, -8], [55, -14], [70, -10], [90, -18], [110, -14], [125, -16]];
+  leaves.forEach(([lx, ly], i) => {
+    ctx.beginPath();
+    ctx.ellipse(lx, ly + (i % 2 ? -6 : 4), 8, 3, (i % 2 ? -0.3 : 0.3) + rng() * 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(77, 22, 31, 0.15)';
+    ctx.fill();
+    ctx.strokeStyle = '#4D161F';
+    ctx.lineWidth = 0.6 / scale;
+    ctx.stroke();
+  });
+  
+  // Olives
+  [[40, -5], [75, -20], [115, -12]].forEach(([ox, oy]) => {
+    ctx.beginPath();
+    ctx.arc(ox, oy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(77, 22, 31, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = '#4D161F';
+    ctx.lineWidth = 0.8 / scale;
+    ctx.stroke();
+  });
+  
+  ctx.restore();
+}
+
+// Helper: draw grape vine decoration
+function drawGrapeVine(ctx, x, y, scale, flip, rng) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(flip ? -scale : scale, scale);
+  
+  // Vine
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(15, 10, 30, -5, 50, 5);
+  ctx.bezierCurveTo(70, 15, 90, 0, 120, 10);
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 1.2 / scale;
+  ctx.stroke();
+  
+  // Grape cluster
+  const grapes = [[40, 15], [44, 22], [36, 22], [40, 28], [48, 28], [32, 28], [44, 34], [36, 34]];
+  grapes.forEach(([gx, gy]) => {
+    ctx.beginPath();
+    ctx.arc(gx, gy, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(77, 22, 31, 0.25)';
+    ctx.fill();
+    ctx.strokeStyle = '#4D161F';
+    ctx.lineWidth = 0.6 / scale;
+    ctx.stroke();
+  });
+  
+  // Leaf
+  ctx.beginPath();
+  ctx.moveTo(80, 0);
+  ctx.bezierCurveTo(90, -15, 105, -12, 100, 0);
+  ctx.bezierCurveTo(105, 12, 90, 15, 80, 0);
+  ctx.fillStyle = 'rgba(77, 22, 31, 0.1)';
+  ctx.fill();
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 0.7 / scale;
+  ctx.stroke();
+  // Leaf veins
+  ctx.beginPath();
+  ctx.moveTo(80, 0);
+  ctx.lineTo(100, 0);
+  ctx.moveTo(87, 0);
+  ctx.lineTo(92, -6);
+  ctx.moveTo(92, 0);
+  ctx.lineTo(96, -4);
+  ctx.moveTo(87, 0);
+  ctx.lineTo(92, 6);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+// ============================================================
+// INDIVIDUAL MACHINE ILLUSTRATIONS
+// ============================================================
+
+function drawHopper(ctx, rng, c1, c2, c3, c4) {
+  // Large funnel/hopper shape
+  ctx.beginPath();
+  ctx.moveTo(-90, -80);
+  ctx.lineTo(90, -80);
+  ctx.lineTo(50, 20);
+  ctx.lineTo(30, 20);
+  ctx.lineTo(30, 80);
+  ctx.lineTo(-30, 80);
+  ctx.lineTo(-30, 20);
+  ctx.lineTo(-50, 20);
+  ctx.closePath();
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Cross-hatching on funnel sides
+  ctx.save();
+  ctx.clip();
+  crossHatch(ctx, -100, -80, 80, 100, 4, 0.5, c4);
+  crossHatch(ctx, 20, -80, 80, 100, 4, -0.5, c4);
+  ctx.restore();
+  
+  // Rivets
+  [[-70, -75], [70, -75], [-60, -60], [60, -60], [40, 15], [-40, 15]].forEach(([x, y]) => {
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = c2;
+    ctx.fill();
+  });
+  
+  // Olives falling in
+  for (let i = 0; i < 12; i++) {
+    const ox = (rng() - 0.5) * 120;
+    const oy = -80 - rng() * 40;
+    ctx.beginPath();
+    ctx.ellipse(ox, oy, 4 + rng() * 2, 3 + rng(), rng() * Math.PI, 0, Math.PI * 2);
+    ctx.fillStyle = c4;
+    ctx.fill();
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  
+  // Support legs
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-25, 80); ctx.lineTo(-40, 120);
+  ctx.moveTo(25, 80); ctx.lineTo(40, 120);
+  ctx.moveTo(-40, 120); ctx.lineTo(40, 120);
+  ctx.stroke();
+  
+  // Small wheels
+  [[-40, 125], [40, 125]].forEach(([x, y]) => {
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = c2;
+    ctx.fill();
+  });
+}
+
+function drawCleaner(ctx, rng, c1, c2, c3, c4) {
+  // Rotating drum body
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 100, 60, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Drum slots (perforations)
+  for (let angle = 0; angle < Math.PI * 2; angle += 0.3) {
+    for (let r = 20; r < 90; r += 18) {
+      const x = Math.cos(angle + r * 0.01) * r;
+      const y = Math.sin(angle + r * 0.01) * (r * 0.6);
+      ctx.beginPath();
+      ctx.ellipse(x, y, 2.5, 1.5, angle, 0, Math.PI * 2);
+      ctx.fillStyle = c4;
+      ctx.fill();
+    }
+  }
+  
+  // Central axis
+  ctx.beginPath();
+  ctx.moveTo(-120, 0);
+  ctx.lineTo(120, 0);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  // End caps
+  [-100, 100].forEach(x => {
+    ctx.beginPath();
+    ctx.ellipse(x, 0, 10, 60, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+  
+  // Water drops below
+  for (let i = 0; i < 20; i++) {
+    const dx = (rng() - 0.5) * 160;
+    const dy = 65 + rng() * 50;
+    ctx.beginPath();
+    ctx.moveTo(dx, dy);
+    ctx.lineTo(dx - 2, dy + 8);
+    ctx.bezierCurveTo(dx - 2, dy + 12, dx + 2, dy + 12, dx + 2, dy + 8);
+    ctx.closePath();
+    ctx.fillStyle = c4;
+    ctx.fill();
+  }
+  
+  // Support frame
+  ctx.beginPath();
+  ctx.moveTo(-110, 65); ctx.lineTo(-110, 120);
+  ctx.moveTo(110, 65); ctx.lineTo(110, 120);
+  ctx.moveTo(-120, 120); ctx.lineTo(120, 120);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawCrusher(ctx, rng, c1, c2, c3, c4) {
+  // Mill stones - top
+  ctx.beginPath();
+  ctx.ellipse(0, -20, 90, 35, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Stone texture (radial lines)
+  for (let a = 0; a < Math.PI * 2; a += 0.15) {
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * 25, -20 + Math.sin(a) * 10);
+    ctx.lineTo(Math.cos(a) * 85, -20 + Math.sin(a) * 33);
+    ctx.strokeStyle = `rgba(77, 22, 31, ${0.1 + rng() * 0.15})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+  
+  // Central hole
+  ctx.beginPath();
+  ctx.ellipse(0, -20, 15, 6, 0, 0, Math.PI * 2);
+  ctx.fillStyle = c4;
+  ctx.fill();
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Side view - body
+  ctx.beginPath();
+  ctx.moveTo(-90, -20);
+  ctx.lineTo(-90, 30);
+  ctx.moveTo(90, -20);
+  ctx.lineTo(90, 30);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Bottom stone
+  ctx.beginPath();
+  ctx.ellipse(0, 30, 90, 35, 0, 0, Math.PI);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Cross-hatch shadow
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(-90, -5, 180, 35);
+  ctx.clip();
+  crossHatch(ctx, -90, -5, 180, 35, 5, 0.7, 'rgba(77, 22, 31, 0.12)');
+  ctx.restore();
+  
+  // Olive paste dripping
+  for (let i = 0; i < 8; i++) {
+    const dx = -70 + rng() * 140;
+    ctx.beginPath();
+    ctx.moveTo(dx, 50);
+    ctx.bezierCurveTo(dx - 3, 60 + rng() * 20, dx + 3, 70 + rng() * 20, dx, 80 + rng() * 20);
+    ctx.strokeStyle = c3;
+    ctx.lineWidth = 1 + rng();
+    ctx.stroke();
+  }
+  
+  // Handle
+  ctx.beginPath();
+  ctx.moveTo(0, -55);
+  ctx.lineTo(0, -90);
+  ctx.lineTo(60, -90);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(60, -90, 6, 0, Math.PI * 2);
+  ctx.fillStyle = c2;
+  ctx.fill();
+}
+
+function drawHCentrifuge(ctx, rng, c1, c2, c3, c4) {
+  // Horizontal cylinder
+  ctx.beginPath();
+  ctx.moveTo(-100, -40);
+  ctx.lineTo(80, -40);
+  ctx.lineTo(80, 40);
+  ctx.lineTo(-100, 40);
+  ctx.closePath();
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Horizontal lines (body texture)
+  for (let y = -30; y <= 30; y += 8) {
+    ctx.beginPath();
+    ctx.moveTo(-95, y);
+    ctx.lineTo(75, y);
+    ctx.strokeStyle = `rgba(77, 22, 31, ${0.08 + rng() * 0.05})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+  
+  // End cap (right - conical)
+  ctx.beginPath();
+  ctx.moveTo(80, -40);
+  ctx.lineTo(130, -20);
+  ctx.lineTo(130, 20);
+  ctx.lineTo(80, 40);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  crossHatch(ctx, 80, -40, 50, 80, 4, -0.3, 'rgba(77, 22, 31, 0.1)');
+  
+  // Left end cap
+  ctx.beginPath();
+  ctx.ellipse(-100, 0, 10, 40, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Internal auger (visible through cutaway)
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(-95, -35, 170, 70);
+  ctx.clip();
+  for (let x = -90; x < 80; x += 25) {
+    ctx.beginPath();
+    ctx.moveTo(x, -35);
+    ctx.bezierCurveTo(x + 10, -15, x + 15, 15, x + 25, 35);
+    ctx.strokeStyle = c3;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+  
+  // Output pipes
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 2;
+  // Oil output
+  ctx.beginPath();
+  ctx.moveTo(130, -10); ctx.lineTo(150, -30); ctx.lineTo(150, -60);
+  ctx.stroke();
+  // Water output
+  ctx.beginPath();
+  ctx.moveTo(130, 10); ctx.lineTo(150, 30); ctx.lineTo(150, 60);
+  ctx.stroke();
+  
+  // Labels
+  ctx.font = 'italic 9px Montserrat';
+  ctx.fillStyle = c2;
+  ctx.textAlign = 'left';
+  ctx.fillText('aceite', 155, -45);
+  ctx.fillText('agua', 155, 50);
+  
+  // Support frame
+  ctx.beginPath();
+  ctx.moveTo(-90, 45); ctx.lineTo(-90, 90);
+  ctx.moveTo(70, 45); ctx.lineTo(70, 90);
+  ctx.moveTo(-100, 90); ctx.lineTo(80, 90);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawVCentrifuge(ctx, rng, c1, c2, c3, c4) {
+  // Vertical drum
+  ctx.beginPath();
+  ctx.ellipse(0, -70, 60, 20, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(-60, -70); ctx.lineTo(-60, 60);
+  ctx.moveTo(60, -70); ctx.lineTo(60, 60);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.ellipse(0, 60, 60, 20, 0, 0, Math.PI);
+  ctx.stroke();
+  
+  // Internal discs
+  for (let y = -50; y < 50; y += 15) {
+    ctx.beginPath();
+    ctx.ellipse(0, y, 55, 8, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = c4;
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  }
+  
+  // Central spindle
+  ctx.beginPath();
+  ctx.moveTo(0, -90); ctx.lineTo(0, 80);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  // Motor on top
+  ctx.beginPath();
+  ctx.rect(-25, -110, 50, 25);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  crossHatch(ctx, -25, -110, 50, 25, 3, 0, 'rgba(77, 22, 31, 0.1)');
+  
+  // Output at bottom
+  ctx.beginPath();
+  ctx.moveTo(-10, 75); ctx.lineTo(-10, 110);
+  ctx.lineTo(-40, 110);
+  ctx.moveTo(10, 75); ctx.lineTo(10, 100);
+  ctx.lineTo(40, 100);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Spinning arrows
+  ctx.beginPath();
+  ctx.arc(0, 0, 70, -0.5, 0.8);
+  ctx.strokeStyle = c3;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Arrow head
+  ctx.beginPath();
+  ctx.moveTo(70 * Math.cos(0.8), 70 * Math.sin(0.8));
+  ctx.lineTo(70 * Math.cos(0.8) - 8, 70 * Math.sin(0.8) - 5);
+  ctx.lineTo(70 * Math.cos(0.8) + 2, 70 * Math.sin(0.8) - 8);
+  ctx.fillStyle = c3;
+  ctx.fill();
+}
+
+function drawFilter(ctx, rng, c1, c2, c3, c4) {
+  // Filter press plates
+  for (let x = -80; x <= 80; x += 20) {
+    ctx.beginPath();
+    ctx.rect(x - 6, -60, 12, 120);
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Texture on plates
+    for (let y = -55; y < 55; y += 6) {
+      ctx.beginPath();
+      ctx.moveTo(x - 4, y);
+      ctx.lineTo(x + 4, y);
+      ctx.strokeStyle = `rgba(77, 22, 31, ${0.1 + rng() * 0.1})`;
+      ctx.lineWidth = 0.3;
+      ctx.stroke();
+    }
+  }
+  
+  // Top frame
+  ctx.beginPath();
+  ctx.rect(-100, -70, 200, 10);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Bottom frame  
+  ctx.beginPath();
+  ctx.rect(-100, 60, 200, 10);
+  ctx.stroke();
+  
+  // Press mechanism (left)
+  ctx.beginPath();
+  ctx.rect(-120, -50, 20, 100);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  crossHatch(ctx, -120, -50, 20, 100, 3, 0, c4);
+  
+  // Hydraulic arm
+  ctx.beginPath();
+  ctx.moveTo(-140, 0); ctx.lineTo(-120, 0);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  
+  // Drops below
+  for (let i = 0; i < 15; i++) {
+    const dx = -70 + rng() * 140;
+    const dy = 75 + rng() * 30;
+    ctx.beginPath();
+    ctx.arc(dx, dy, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = c3;
+    ctx.fill();
+  }
+  
+  // Collection tray
+  ctx.beginPath();
+  ctx.moveTo(-90, 100); ctx.lineTo(-90, 110); ctx.lineTo(90, 110); ctx.lineTo(90, 100);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function drawTank(ctx, rng, c1, c2, c3, c4) {
+  // Large cylindrical tank
+  ctx.beginPath();
+  ctx.ellipse(0, -80, 70, 25, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(-70, -80); ctx.lineTo(-70, 70);
+  ctx.moveTo(70, -80); ctx.lineTo(70, 70);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.ellipse(0, 70, 70, 25, 0, 0, Math.PI);
+  ctx.stroke();
+  
+  // Liquid level lines
+  for (let y = -20; y < 60; y += 12) {
+    ctx.beginPath();
+    ctx.moveTo(-65, y);
+    ctx.bezierCurveTo(-30, y + (rng() - 0.5) * 4, 30, y + (rng() - 0.5) * 4, 65, y);
+    ctx.strokeStyle = `rgba(77, 22, 31, ${0.08 + (y + 20) / 200})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+  
+  // Sediment layers at bottom
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(0, 70, 70, 25, 0, 0, Math.PI);
+  ctx.clip();
+  for (let y = 55; y < 95; y += 3) {
+    ctx.beginPath();
+    ctx.moveTo(-70, y);
+    ctx.lineTo(70, y);
+    ctx.strokeStyle = `rgba(77, 22, 31, ${0.15 + (y - 55) * 0.01})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+  
+  // Sight glass
+  ctx.beginPath();
+  ctx.rect(72, -20, 15, 50);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Valve at bottom
+  ctx.beginPath();
+  ctx.moveTo(-10, 90); ctx.lineTo(-10, 115);
+  ctx.lineTo(10, 115); ctx.lineTo(10, 90);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Handle
+  ctx.beginPath();
+  ctx.moveTo(-15, 105); ctx.lineTo(15, 105);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function drawBottlerOil(ctx, rng, c1, c2, c3, c4) {
+  // Conveyor belt with bottles
+  ctx.beginPath();
+  ctx.moveTo(-130, 20); ctx.lineTo(130, 20);
+  ctx.moveTo(-130, 30); ctx.lineTo(130, 30);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Conveyor rollers
+  for (let x = -120; x <= 120; x += 20) {
+    ctx.beginPath();
+    ctx.arc(x, 25, 5, 0, Math.PI * 2);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Bottles on conveyor
+  const bottlePositions = [-90, -50, -10, 30, 70, 110];
+  bottlePositions.forEach((bx, i) => {
+    // Bottle body
+    ctx.beginPath();
+    ctx.moveTo(bx - 8, 18);
+    ctx.lineTo(bx - 8, -20);
+    ctx.lineTo(bx - 4, -30);
+    ctx.lineTo(bx - 4, -40);
+    ctx.lineTo(bx + 4, -40);
+    ctx.lineTo(bx + 4, -30);
+    ctx.lineTo(bx + 8, -20);
+    ctx.lineTo(bx + 8, 18);
+    ctx.closePath();
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Fill level (more filled on the right)
+    if (i >= 2) {
+      const fillH = Math.min(i - 1, 4) * 8;
+      ctx.beginPath();
+      ctx.rect(bx - 6, 16 - fillH, 12, fillH);
+      ctx.fillStyle = `rgba(77, 22, 31, ${0.1 + i * 0.04})`;
+      ctx.fill();
+    }
+  });
+  
+  // Filling nozzle above
+  ctx.beginPath();
+  ctx.moveTo(-15, -80); ctx.lineTo(-15, -50);
+  ctx.lineTo(-5, -45); ctx.lineTo(5, -45);
+  ctx.lineTo(15, -50); ctx.lineTo(15, -80);
+  ctx.rect(-25, -95, 50, 15);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Oil stream
+  ctx.beginPath();
+  ctx.moveTo(0, -45);
+  ctx.bezierCurveTo(-1, -35, 1, -30, 0, -20);
+  ctx.strokeStyle = c3;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Support legs
+  ctx.beginPath();
+  ctx.moveTo(-120, 35); ctx.lineTo(-120, 70);
+  ctx.moveTo(120, 35); ctx.lineTo(120, 70);
+  ctx.moveTo(0, 35); ctx.lineTo(0, 70);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawDestemmer(ctx, rng, c1, c2, c3, c4) {
+  // Main body - perforated cylinder
+  ctx.beginPath();
+  ctx.rect(-100, -40, 200, 80);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Perforations
+  for (let x = -90; x < 90; x += 12) {
+    for (let y = -30; y < 30; y += 12) {
+      ctx.beginPath();
+      ctx.arc(x + (rng() - 0.5) * 3, y + (rng() - 0.5) * 3, 3, 0, Math.PI * 2);
+      ctx.strokeStyle = c4;
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+    }
+  }
+  
+  // Internal beater shaft with paddles
+  ctx.beginPath();
+  ctx.moveTo(-110, 0); ctx.lineTo(110, 0);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  for (let x = -80; x <= 80; x += 30) {
+    const angle = rng() * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + Math.cos(angle) * 25, Math.sin(angle) * 25);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+  
+  // Hopper on top
+  ctx.beginPath();
+  ctx.moveTo(-40, -40); ctx.lineTo(-60, -80);
+  ctx.lineTo(60, -80); ctx.lineTo(40, -40);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Grapes going in
+  for (let i = 0; i < 8; i++) {
+    const gx = -30 + rng() * 60;
+    const gy = -85 - rng() * 25;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = c4;
+    ctx.fill();
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  }
+  
+  // Stems output (right)
+  ctx.beginPath();
+  ctx.moveTo(100, -10); ctx.lineTo(130, -30);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(115 + rng() * 30, -35 - rng() * 20);
+    ctx.lineTo(120 + rng() * 30, -25 - rng() * 15);
+    ctx.strokeStyle = c3;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  
+  // Juice/must below
+  for (let i = 0; i < 12; i++) {
+    const dx = -80 + rng() * 160;
+    const dy = 45 + rng() * 30;
+    ctx.beginPath();
+    ctx.arc(dx, dy, 2, 0, Math.PI * 2);
+    ctx.fillStyle = c3;
+    ctx.fill();
+  }
+}
+
+function drawFermenter(ctx, rng, c1, c2, c3, c4) {
+  // Large steel tank
+  ctx.beginPath();
+  ctx.ellipse(0, -85, 75, 20, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(-75, -85); ctx.lineTo(-75, 60);
+  ctx.moveTo(75, -85); ctx.lineTo(75, 60);
+  ctx.stroke();
+  
+  // Conical bottom
+  ctx.beginPath();
+  ctx.moveTo(-75, 60); ctx.lineTo(0, 110);
+  ctx.lineTo(75, 60);
+  ctx.stroke();
+  
+  // Bubbles (fermentation!)
+  for (let i = 0; i < 25; i++) {
+    const bx = (rng() - 0.5) * 120;
+    const by = -60 + rng() * 100;
+    const br = 2 + rng() * 5;
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(77, 22, 31, ${0.1 + rng() * 0.15})`;
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  }
+  
+  // Temperature gauge
+  ctx.beginPath();
+  ctx.arc(80, -20, 15, 0, Math.PI * 2);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(80, -20);
+  ctx.lineTo(80 + Math.cos(-0.8) * 10, -20 + Math.sin(-0.8) * 10);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Manhole on top
+  ctx.beginPath();
+  ctx.ellipse(0, -88, 18, 5, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // CO2 escape
+  ctx.font = 'italic 8px Montserrat';
+  ctx.fillStyle = c3;
+  ctx.textAlign = 'center';
+  ctx.fillText('CO₂', 0, -100);
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(-5 + i * 5, -105);
+    ctx.bezierCurveTo(-3 + i * 5, -112, -7 + i * 5, -118, -5 + i * 5, -125);
+    ctx.strokeStyle = c4;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+  
+  // Support legs
+  [[-60, 105], [60, 105]].forEach(([lx, ly]) => {
+    ctx.beginPath();
+    ctx.moveTo(lx, ly - 15); ctx.lineTo(lx, ly + 15);
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  });
+}
+
+function drawBlendTank(ctx, rng, c1, c2, c3, c4) {
+  // Tank body
+  ctx.beginPath();
+  ctx.ellipse(0, -70, 65, 22, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-65, -70); ctx.lineTo(-65, 60);
+  ctx.moveTo(65, -70); ctx.lineTo(65, 60);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(0, 60, 65, 22, 0, 0, Math.PI);
+  ctx.stroke();
+  
+  // Mixing swirl inside
+  ctx.beginPath();
+  for (let a = 0; a < Math.PI * 6; a += 0.1) {
+    const r = 5 + a * 7;
+    const x = Math.cos(a) * Math.min(r, 55);
+    const y = -5 + Math.sin(a) * Math.min(r * 0.4, 45);
+    if (a === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = c4;
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  
+  // Three input pipes (different wines)
+  const pipes = [
+    { x: -80, y: -50, label: '①' },
+    { x: -80, y: -20, label: '②' },
+    { x: -80, y: 10,  label: '③' }
+  ];
+  pipes.forEach(p => {
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y); ctx.lineTo(-65, p.y);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.font = '12px Montserrat';
+    ctx.fillStyle = c2;
+    ctx.textAlign = 'right';
+    ctx.fillText(p.label, p.x - 5, p.y + 4);
+  });
+  
+  // Paddle mixer
+  ctx.beginPath();
+  ctx.moveTo(0, -92); ctx.lineTo(0, 55);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-20, 20); ctx.lineTo(20, 20);
+  ctx.moveTo(-15, 35); ctx.lineTo(15, 35);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Motor
+  ctx.beginPath();
+  ctx.rect(-18, -110, 36, 18);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function drawAgingTank(ctx, rng, c1, c2, c3, c4) {
+  // Large aging vessel (more ornate)
+  ctx.beginPath();
+  ctx.ellipse(0, -80, 80, 25, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(-80, -80); ctx.lineTo(-80, 70);
+  ctx.moveTo(80, -80); ctx.lineTo(80, 70);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.ellipse(0, 70, 80, 25, 0, 0, Math.PI);
+  ctx.stroke();
+  
+  // Decorative bands
+  [-50, 0, 40].forEach(y => {
+    ctx.beginPath();
+    ctx.moveTo(-78, y); ctx.lineTo(78, y);
+    ctx.moveTo(-78, y + 4); ctx.lineTo(78, y + 4);
+    ctx.strokeStyle = c4;
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  });
+  
+  // Clock/time symbol
+  ctx.beginPath();
+  ctx.arc(0, -10, 25, 0, Math.PI * 2);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Clock hands
+  ctx.beginPath();
+  ctx.moveTo(0, -10); ctx.lineTo(0, -28);
+  ctx.moveTo(0, -10); ctx.lineTo(12, -5);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, -10, 2, 0, Math.PI * 2);
+  ctx.fillStyle = c2;
+  ctx.fill();
+  
+  // Hour markers
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * 21, -10 + Math.sin(a) * 21);
+    ctx.lineTo(Math.cos(a) * 24, -10 + Math.sin(a) * 24);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Valve
+  ctx.beginPath();
+  ctx.rect(-8, 85, 16, 20);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-12, 92); ctx.lineTo(12, 92);
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function drawBottlerWine(ctx, rng, c1, c2, c3, c4) {
+  // Similar to oil bottler but with wine bottles (taller, slimmer)
+  // Conveyor
+  ctx.beginPath();
+  ctx.moveTo(-130, 30); ctx.lineTo(130, 30);
+  ctx.moveTo(-130, 40); ctx.lineTo(130, 40);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  for (let x = -120; x <= 120; x += 20) {
+    ctx.beginPath();
+    ctx.arc(x, 35, 5, 0, Math.PI * 2);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Wine bottles (Bordeaux shape)
+  const bpos = [-100, -60, -20, 20, 60, 100];
+  bpos.forEach((bx, i) => {
+    ctx.beginPath();
+    ctx.moveTo(bx - 7, 28);
+    ctx.lineTo(bx - 7, -15);
+    ctx.bezierCurveTo(bx - 7, -25, bx - 4, -30, bx - 4, -40);
+    ctx.lineTo(bx - 3, -55);
+    ctx.lineTo(bx + 3, -55);
+    ctx.lineTo(bx + 4, -40);
+    ctx.bezierCurveTo(bx + 4, -30, bx + 7, -25, bx + 7, -15);
+    ctx.lineTo(bx + 7, 28);
+    ctx.closePath();
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Wine level
+    if (i >= 1 && i <= 4) {
+      const fillLevel = Math.min((i) * 10, 35);
+      ctx.beginPath();
+      ctx.rect(bx - 5, 26 - fillLevel, 10, fillLevel);
+      ctx.fillStyle = `rgba(77, 22, 31, ${0.15 + i * 0.05})`;
+      ctx.fill();
+    }
+    
+    // Label on filled bottles
+    if (i >= 3) {
+      ctx.beginPath();
+      ctx.rect(bx - 5, -5, 10, 15);
+      ctx.strokeStyle = c4;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+    
+    // Cork on last bottle
+    if (i === 5) {
+      ctx.beginPath();
+      ctx.rect(bx - 2.5, -58, 5, 5);
+      ctx.fillStyle = c3;
+      ctx.fill();
+    }
+  });
+  
+  // Filling head
+  ctx.beginPath();
+  ctx.rect(-35, -90, 70, 25);
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Nozzles
+  [-20, 0, 20].forEach(nx => {
+    ctx.beginPath();
+    ctx.moveTo(nx, -65); ctx.lineTo(nx, -55);
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+}
+
+function drawBarrels(ctx, rng, c1, c2, c3, c4) {
+  // Stack of oak barrels - the most iconic
+  const drawOneBarrel = (ox, oy, scale) => {
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(scale, scale);
+    
+    // Barrel body (side view)
+    ctx.beginPath();
+    ctx.moveTo(-50, -30);
+    ctx.bezierCurveTo(-55, -15, -55, 15, -50, 30);
+    ctx.lineTo(50, 30);
+    ctx.bezierCurveTo(55, 15, 55, -15, 50, -30);
+    ctx.closePath();
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 2 / scale;
+    ctx.stroke();
+    
+    // Staves
+    for (let x = -40; x <= 40; x += 12) {
+      ctx.beginPath();
+      const bulge = 1 - Math.abs(x) / 60;
+      ctx.moveTo(x, -30);
+      ctx.lineTo(x, 30);
+      ctx.strokeStyle = `rgba(77, 22, 31, ${0.1 + rng() * 0.08})`;
+      ctx.lineWidth = 0.5 / scale;
+      ctx.stroke();
+    }
+    
+    // Metal hoops
+    [-22, -8, 8, 22].forEach(y => {
+      ctx.beginPath();
+      const w = 50 + (1 - Math.abs(y) / 30) * 5;
+      ctx.moveTo(-w, y);
+      ctx.lineTo(w, y);
+      ctx.strokeStyle = c2;
+      ctx.lineWidth = 1.5 / scale;
+      ctx.stroke();
+    });
+    
+    // Bung hole
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
+    ctx.fillStyle = c4;
+    ctx.fill();
+    ctx.strokeStyle = c2;
+    ctx.lineWidth = 1 / scale;
+    ctx.stroke();
+    
+    // End grain circle (visible end)
+    ctx.beginPath();
+    ctx.ellipse(52, 0, 4, 28, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 1 / scale;
+    ctx.stroke();
+    
+    ctx.restore();
+  };
+  
+  // Stack: 2 on bottom, 1 on top (offset for asymmetry)
+  drawOneBarrel(-45, 40, 0.9);
+  drawOneBarrel(50, 45, 0.85);
+  drawOneBarrel(5, -35, 0.95);
+  
+  // Wood grain texture in background
+  for (let i = 0; i < 30; i++) {
+    const lx = -120 + rng() * 240;
+    const ly = 80 + rng() * 30;
+    ctx.beginPath();
+    ctx.moveTo(lx, ly);
+    ctx.lineTo(lx + 10 + rng() * 20, ly + (rng() - 0.5) * 3);
+    ctx.strokeStyle = `rgba(77, 22, 31, 0.06)`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+}
+
+function drawQuietZone(ctx, rng, c1, c2, c3, c4) {
+  // Wine bottles stored horizontally in rack
+  const drawRackBottle = (bx, by, rot) => {
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(rot);
+    
+    ctx.beginPath();
+    ctx.moveTo(-30, -5);
+    ctx.lineTo(15, -5);
+    ctx.bezierCurveTo(18, -5, 20, -3, 22, -2);
+    ctx.lineTo(30, -2);
+    ctx.lineTo(30, 2);
+    ctx.lineTo(22, 2);
+    ctx.bezierCurveTo(20, 3, 18, 5, 15, 5);
+    ctx.lineTo(-30, 5);
+    ctx.closePath();
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Wine inside
+    ctx.beginPath();
+    ctx.rect(-28, -3, 40, 6);
+    ctx.fillStyle = `rgba(77, 22, 31, 0.08)`;
+    ctx.fill();
+    
+    ctx.restore();
+  };
+  
+  // Rack structure
+  for (let row = 0; row < 4; row++) {
+    const ry = -80 + row * 45;
+    ctx.beginPath();
+    ctx.moveTo(-110, ry + 15);
+    ctx.lineTo(110, ry + 15);
+    ctx.strokeStyle = c4;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    for (let col = 0; col < 5; col++) {
+      const bx = -80 + col * 40 + (row % 2 ? 20 : 0);
+      drawRackBottle(bx, ry, (rng() - 0.5) * 0.1);
+    }
+  }
+  
+  // "Silencio" text in delicate handwritten style
+  ctx.font = 'italic 14px Playfair Display';
+  ctx.fillStyle = c3;
+  ctx.textAlign = 'center';
+  ctx.fillText('~ silencio ~', 0, 115);
+  
+  // Dust motes (atmosphere)
+  for (let i = 0; i < 30; i++) {
+    const dx = (rng() - 0.5) * 200;
+    const dy = (rng() - 0.5) * 220;
+    ctx.beginPath();
+    ctx.arc(dx, dy, 0.8 + rng(), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(77, 22, 31, ${0.03 + rng() * 0.04})`;
+    ctx.fill();
+  }
+}
+
+// ============================================================
+// POSTER RENDERING
+// ============================================================
+
+function renderPoster(canvas, machine) {
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const rng = seededRandom(machine.id * 7919);
+  
+  // Background - aged parchment
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, '#F5ECD7');
+  bgGrad.addColorStop(0.3, '#F2E8D0');
+  bgGrad.addColorStop(0.7, '#EDE1C4');
+  bgGrad.addColorStop(1, '#E8D9B8');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+  
+  // Paper texture
+  drawVintageTexture(ctx, W, H, machine.id * 131);
+  
+  // Decorative border frame
+  drawBorderFrame(ctx, W, H, machine.id * 97);
+  
+  // Zone label at top
+  ctx.font = '500 10px Montserrat';
+  ctx.fillStyle = 'rgba(77, 22, 31, 0.5)';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '4px';
+  ctx.fillText(machine.zone === 'ALMAZARA' ? '⸻  A L M A Z A R A  ⸻' : '⸻  B O D E G A  ⸻', W / 2, 55);
+  
+  // Machine number
+  const numX = W / 2;
+  const numY = 85;
+  ctx.beginPath();
+  ctx.arc(numX, numY, 22, 0, Math.PI * 2);
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.font = '700 16px Yeseva One';
+  ctx.fillStyle = '#4D161F';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(machine.id).padStart(2, '0'), numX, numY + 1);
+  ctx.textBaseline = 'alphabetic';
+  
+  // Machine name
+  const nameLines = machine.name.split('\n');
+  ctx.font = '36px Yeseva One';
+  ctx.fillStyle = '#4D161F';
+  ctx.textAlign = 'center';
+  
+  const nameStartY = nameLines.length > 1 ? 135 : 148;
+  nameLines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, nameStartY + i * 40);
+  });
+  
+  // Decorative line after name
+  const afterNameY = nameStartY + nameLines.length * 40 + 8;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 50, afterNameY);
+  ctx.lineTo(W / 2 + 50, afterNameY);
+  ctx.strokeStyle = 'rgba(77, 22, 31, 0.4)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  
+  // === VINTAGE ILLUSTRATION ===
+  const illustrationCenterY = 470;
+  
+  // Circular vignette frame for illustration
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(W / 2, illustrationCenterY, 160, 155, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Inner decorative circle
+  ctx.beginPath();
+  ctx.ellipse(W / 2, illustrationCenterY, 150, 145, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(77, 22, 31, 0.3)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  
+  // Clip to ellipse for illustration
+  ctx.beginPath();
+  ctx.ellipse(W / 2, illustrationCenterY, 148, 143, 0, 0, Math.PI * 2);
+  ctx.clip();
+  
+  // Light fill inside frame
+  ctx.fillStyle = 'rgba(242, 232, 208, 0.5)';
+  ctx.fill();
+  
+  drawVintageIllustration(ctx, W / 2, illustrationCenterY, machine.icon, machine.id * 2039);
+  ctx.restore();
+  
+  // Decorative vegetation based on zone
+  if (machine.zone === 'ALMAZARA') {
+    drawOliveBranch(ctx, 90, illustrationCenterY - 165, 0.8, false, rng);
+    drawOliveBranch(ctx, W - 90, illustrationCenterY + 165, 0.7, true, rng);
+  } else {
+    drawGrapeVine(ctx, 80, illustrationCenterY - 160, 0.85, false, rng);
+    drawGrapeVine(ctx, W - 80, illustrationCenterY + 160, 0.75, true, rng);
+  }
+  
+  // Description
+  ctx.font = 'italic 14px Playfair Display';
+  ctx.fillStyle = 'rgba(77, 22, 31, 0.7)';
+  ctx.textAlign = 'center';
+  ctx.fillText(machine.desc, W / 2, illustrationCenterY + 180);
+  
+  // Step indicator
+  ctx.font = '300 11px Montserrat';
+  ctx.fillStyle = 'rgba(77, 22, 31, 0.5)';
+  ctx.fillText(`Paso ${machine.id} de 15`, W / 2, illustrationCenterY + 205);
+  
+  // Bottom divider
+  const bottomDivY = H - 190;
+  ctx.beginPath();
+  ctx.moveTo(60, bottomDivY);
+  ctx.lineTo(W - 60, bottomDivY);
+  ctx.strokeStyle = 'rgba(77, 22, 31, 0.25)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  
+  // Camera icon (simple)
+  const camY = H - 145;
+  ctx.strokeStyle = '#4D161F';
+  ctx.lineWidth = 1.5;
+  // Phone outline
+  ctx.beginPath();
+  ctx.roundRect(W/2 - 18, camY - 28, 36, 56, 4);
+  ctx.stroke();
+  // Screen
+  ctx.beginPath();
+  ctx.rect(W/2 - 14, camY - 22, 28, 40);
+  ctx.strokeStyle = 'rgba(77, 22, 31, 0.3)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  // Camera dot
+  ctx.beginPath();
+  ctx.arc(W/2, camY - 25, 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#4D161F';
+  ctx.fill();
+  // Signal waves
+  for (let i = 1; i <= 3; i++) {
+    ctx.beginPath();
+    ctx.arc(W/2, camY - 5, 8 + i * 7, -Math.PI * 0.7, -Math.PI * 0.3);
+    ctx.strokeStyle = `rgba(77, 22, 31, ${0.4 - i * 0.1})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // CTA text
+  ctx.font = '500 11px Montserrat';
+  ctx.fillStyle = '#4D161F';
+  ctx.textAlign = 'center';
+  ctx.fillText('APUNTA TU CÁMARA AQUÍ', W / 2, H - 75);
+  
+  // "Logo" Aldonza text (bottom - above border lines)
+  ctx.font = '18px Yeseva One';
+  ctx.fillStyle = 'rgba(77, 22, 31, 0.6)';
+  ctx.fillText('Aldonza', W / 2, H - 46);
+  
+  // Unique asymmetric detail per poster (seed-based position)
+  const detailX = 55 + rng() * 20;
+  const detailY = H - 80 + rng() * 15;
+  ctx.beginPath();
+  ctx.moveTo(detailX, detailY);
+  ctx.lineTo(detailX + 5, detailY - 8);
+  ctx.lineTo(detailX + 10, detailY);
+  ctx.lineTo(detailX + 5, detailY + 8);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(77, 22, 31, 0.15)';
+  ctx.fill();
+}
+
+// ============================================================
+// INIT: Render all posters and set up downloads
+// ============================================================
+
+const grid = document.getElementById('grid');
+
+machines.forEach(machine => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'poster-wrapper';
+  
+  const label = document.createElement('div');
+  label.className = 'poster-label';
+  label.textContent = `${String(machine.id).padStart(2, '0')} · ${machine.zone}`;
+  
+  const posterDiv = document.createElement('div');
+  posterDiv.className = 'poster';
+  
+  const canvas = document.createElement('canvas');
+  posterDiv.appendChild(canvas);
+  
+  const btn = document.createElement('button');
+  btn.className = 'download-btn';
+  btn.textContent = 'Descargar PNG';
+  btn.onclick = () => downloadPoster(canvas, machine);
+  
+  wrapper.appendChild(label);
+  wrapper.appendChild(posterDiv);
+  wrapper.appendChild(btn);
+  grid.appendChild(wrapper);
+  
+  renderPoster(canvas, machine);
+});
+
+function downloadPoster(canvas, machine) {
+  const link = document.createElement('a');
+  const safeName = machine.name.replace(/\n/g, '_').replace(/\s+/g, '_').toLowerCase();
+  link.download = `cartel_${String(machine.id).padStart(2, '0')}_${safeName}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function downloadAll() {
+  const canvases = document.querySelectorAll('.poster canvas');
+  canvases.forEach((canvas, i) => {
+    setTimeout(() => {
+      downloadPoster(canvas, machines[i]);
+    }, i * 300);
+  });
+}
+</script>
+
+</body>
+</html>
